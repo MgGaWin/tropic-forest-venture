@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #f5f2ed;
+  --color-foreground: #1a2e1a;
+  --color-text-secondary: #6b6b63;
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-playfair);
+}
+
+:root {
+  /* Deep Green */
+  --color-forest-deep: #1a2e1a;
+  --color-ancient-moss: #2d3d2b;
+  --color-vine-green: #3d5a3a;
+  --color-fern-accent: #4a6b47;
+
+  /* Earth Tones */
+  --color-bark-brown: #8b7355;
+  --color-soil-warm: #a69279;
+  --color-fallen-leaf: #c4b49a;
+  --color-morning-mist: #e8dcc8;
+
+  /* Fog/Atmosphere */
+  --color-fog-white: #f5f2ed;
+  --color-light-mist: #eae5dc;
+  --color-stone-gray: #d4cec3;
+  --color-shadow-gray: #8a8478;
+
+  /* Text */
+  --color-text-primary: #1c1c1a;
+  --color-text-body: #3d3d38;
+  --color-text-secondary: #6b6b63;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  background-color: var(--color-fog-white);
+  color: var(--color-text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-vine-green);
+  color: var(--color-fog-white);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-light-mist);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stone-gray);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-shadow-gray);
+}
+
+/* Hero video slow zoom */
+@keyframes slowZoom {
+  from {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+/* Marquee scroll */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
