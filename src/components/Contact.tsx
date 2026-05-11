@@ -28,11 +28,11 @@ export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [fieldsFilled, setFieldsFilled] = useState({ name: false, email: false, message: false });
   const formRef = useRef<HTMLFormElement>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const scriptLoadedRef = useRef(false);
+  const showCaptchaRef = useRef(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -41,12 +41,11 @@ export default function Contact() {
     const name = (formRef.current.elements.namedItem('name') as HTMLInputElement)?.value.trim();
     const email = (formRef.current.elements.namedItem('email') as HTMLInputElement)?.value.trim();
     const message = (formRef.current.elements.namedItem('message') as HTMLTextAreaElement)?.value.trim();
-    const filled = { name: !!name, email: !!email, message: !!message };
-    setFieldsFilled(filled);
-    if (filled.name && filled.email && filled.message && !showCaptcha) {
+    if (name && email && message && !showCaptchaRef.current) {
+      showCaptchaRef.current = true;
       setShowCaptcha(true);
     }
-  }, [showCaptcha]);
+  }, []);
 
   // Load Turnstile script once
   useEffect(() => {
@@ -60,6 +59,11 @@ export default function Contact() {
     document.head.appendChild(script);
 
     return () => {
+      // Clean up widget if mounted
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
@@ -101,8 +105,8 @@ export default function Contact() {
       widgetIdRef.current = null;
     }
     setCaptchaToken(null);
+    showCaptchaRef.current = false;
     setShowCaptcha(false);
-    setFieldsFilled({ name: false, email: false, message: false });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -242,7 +246,7 @@ export default function Contact() {
                 required
                 disabled={status === 'sending'}
                 onChange={checkFields}
-                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none transition-all duration-300 disabled:opacity-50"
+                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c4b49a]/50 transition-all duration-300 disabled:opacity-50"
               />
             </div>
 
@@ -258,7 +262,7 @@ export default function Contact() {
                 required
                 disabled={status === 'sending'}
                 onChange={checkFields}
-                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none transition-all duration-300 disabled:opacity-50"
+                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c4b49a]/50 transition-all duration-300 disabled:opacity-50"
               />
             </div>
 
@@ -274,7 +278,7 @@ export default function Contact() {
                 required
                 disabled={status === 'sending'}
                 onChange={checkFields}
-                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none transition-all duration-300 resize-none disabled:opacity-50"
+                className="w-full bg-transparent border-b border-[#3d5a3a]/30 pb-3 text-[0.9rem] text-[#f5f2ed] placeholder:text-[#6b6b63] focus:border-[#c4b49a] focus:border-b-[1.5px] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c4b49a]/50 transition-all duration-300 resize-none disabled:opacity-50"
               />
             </div>
 
@@ -292,6 +296,12 @@ export default function Contact() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* ARIA live region for form status */}
+            <div aria-live="polite" aria-atomic="true" className="sr-only">
+              {status === 'sent' && 'Message sent successfully.'}
+              {status === 'error' && 'Failed to send message. Please try again.'}
+            </div>
 
             <motion.button
               type="submit"

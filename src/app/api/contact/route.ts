@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-// Simple in-memory rate limiter (per IP)
+// In-memory rate limiter (best-effort on serverless; use Vercel Firewall for production rate limiting)
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_MAX = 5;
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_WINDOW = 60 * 1000;
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
 
-  if (rateLimit.size > 10000) {
-    for (const [key, val] of rateLimit) {
-      if (now > val.resetAt) rateLimit.delete(key);
-    }
+  for (const [key, val] of rateLimit) {
+    if (now > val.resetAt) rateLimit.delete(key);
   }
 
   const entry = rateLimit.get(ip);
@@ -40,6 +38,13 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+interface ContactBody {
+  name?: unknown;
+  email?: unknown;
+  message?: unknown;
+  token?: unknown;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
@@ -59,24 +64,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, message, token } = await request.json();
+    // Validate body is a parseable object
+    let body: ContactBody;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, message, token } = body;
 
     // Verify Turnstile captcha (if configured)
     const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
     if (turnstileSecret) {
-      if (!token) {
+      if (!token || typeof token !== "string") {
         return NextResponse.json(
           { error: "Captcha verification required" },
           { status: 400 }
         );
       }
 
+      // Turnstile requires application/x-www-form-urlencoded
       const captchaRes = await fetch(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
             secret: turnstileSecret,
             response: token,
             remoteip: ip,
@@ -97,6 +121,13 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof name !== "string" || typeof email !== "string" || typeof message !== "string") {
+      return NextResponse.json(
+        { error: "Invalid field types" },
         { status: 400 }
       );
     }

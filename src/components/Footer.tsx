@@ -83,7 +83,7 @@ export default function Footer() {
           className="mt-16 pt-8 border-t border-[#2d3d2b]/30 flex flex-col md:flex-row justify-between items-center gap-4"
         >
           <p className="text-[0.7rem] text-[#6b6b63]">
-            &copy; 2024 Tropic Forest Venture. All rights reserved.
+            &copy; {new Date().getFullYear()} Tropic Forest Venture. All rights reserved.
           </p>
           <p className="text-[0.7rem] text-[#6b6b63]">
             Crafted with reverence for the wild

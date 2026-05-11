@@ -2,6 +2,7 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE } from '@/lib/constants';
 
 interface MarqueeProps {
   items: string[];
@@ -22,7 +23,7 @@ export default function Marquee({ items, speed = 30, reverse = false, className 
       ref={ref}
       initial={{ opacity: 0 }}
       animate={isInView ? { opacity: 1 } : {}}
-      transition={{ duration: 1, ease: 'easeOut' }}
+      transition={{ duration: 1, ease: EASE }}
       className={`overflow-hidden py-8 md:py-12 ${className}`}
     >
       <div

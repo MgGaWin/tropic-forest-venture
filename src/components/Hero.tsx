@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { EASE } from '@/lib/constants';
 import GodRays from './GodRays';
 
@@ -24,19 +24,28 @@ const lineVariants = {
 export default function Hero() {
   const titleRef = useRef(null);
   const titleInView = useInView(titleRef, { once: true });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   return (
     <section className="relative min-h-[100dvh] flex items-end overflow-hidden">
-      {/* Background Video — slow zoom */}
+      {/* Background Video — slow zoom (disabled for reduced motion) */}
       <div className="absolute inset-0 z-0">
         <video
-          autoPlay
+          autoPlay={!prefersReducedMotion}
           muted
           loop
           playsInline
           poster="/images/hero-bg.png"
           preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover scale-105 animate-[slowZoom_20s_ease-in-out_infinite_alternate]"
+          className={`absolute inset-0 w-full h-full object-cover ${prefersReducedMotion ? '' : 'scale-105 animate-[slowZoom_20s_ease-in-out_infinite_alternate]'}`}
           src="/images/hero-video.mp4"
         />
       </div>
@@ -53,8 +62,8 @@ export default function Hero() {
         }}
       />
 
-      {/* God Rays Effect */}
-      <GodRays />
+      {/* God Rays Effect (hidden for reduced motion) */}
+      {!prefersReducedMotion && <GodRays />}
 
       {/* Content — left aligned */}
       <div className="relative z-10 w-full max-w-[1600px] mx-auto px-8 md:px-16 pb-20 md:pb-32">
@@ -74,8 +83,8 @@ export default function Hero() {
             ref={titleRef}
             className="font-serif text-[clamp(3.5rem,9vw,9rem)] leading-[0.85] tracking-tight text-[#f5f2ed] font-extralight"
             variants={titleVariants}
-            initial="hidden"
-            animate={titleInView ? 'visible' : 'hidden'}
+            initial={prefersReducedMotion ? false : 'hidden'}
+            animate={prefersReducedMotion ? 'visible' : (titleInView ? 'visible' : 'hidden')}
           >
             <span className="block overflow-hidden">
               <motion.span className="block" variants={lineVariants}>Where</motion.span>
@@ -111,7 +120,7 @@ export default function Hero() {
           <motion.a
             href="#expeditions"
             className="inline-flex items-center gap-3 text-[0.7rem] tracking-[0.2em] uppercase text-[#c4b49a] border-b border-[#c4b49a]/30 pb-2 hover:gap-4 transition-all duration-300"
-            whileHover={{ x: 5, scale: 1.02 }}
+            whileHover={prefersReducedMotion ? undefined : { x: 5, scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
             <span>Explore our world</span>
@@ -127,7 +136,7 @@ export default function Hero() {
           className="mt-24"
         >
           <motion.div
-            animate={{ y: [0, 8, 0] }}
+            animate={prefersReducedMotion ? undefined : { y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             className="flex flex-col items-start gap-2"
           >

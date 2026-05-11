@@ -1,7 +1,6 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 
 const leaves = [
   { x: '5%', y: '20%', size: 40, delay: 0, speed: 0.15 },
@@ -12,14 +11,11 @@ const leaves = [
   { x: '90%', y: '50%', size: 38, delay: 3, speed: 0.14 },
 ];
 
-function Leaf({ x, y, size, delay, speed }: typeof leaves[0]) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll();
+function Leaf({ x, y, size, delay, speed, scrollYProgress }: typeof leaves[0] & { scrollYProgress: MotionValue<number> }) {
   const yOffset = useTransform(scrollYProgress, [0, 1], [0, -200 * speed]);
 
   return (
     <motion.div
-      ref={ref}
       className="absolute pointer-events-none"
       style={{
         left: x,
@@ -69,10 +65,12 @@ function Leaf({ x, y, size, delay, speed }: typeof leaves[0]) {
 }
 
 export default function FloatingLeaves() {
+  const { scrollYProgress } = useScroll();
+
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       {leaves.map((leaf, i) => (
-        <Leaf key={i} {...leaf} />
+        <Leaf key={i} {...leaf} scrollYProgress={scrollYProgress} />
       ))}
     </div>
   );
